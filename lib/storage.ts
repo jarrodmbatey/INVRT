@@ -22,6 +22,12 @@ export async function saveRender(filename: string, bytes: Buffer): Promise<strin
     });
     return blob.url;
   }
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Blob storage is not connected. In your Vercel project: Storage tab → Create → Blob, " +
+        "connect it to this project, then redeploy.",
+    );
+  }
   const dir = path.join(process.cwd(), "public", "renders");
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), bytes);
