@@ -1,0 +1,51 @@
+// INVRT — minimal persistence. Trees/vocab/rules live in lib/translation/ as
+// config files; this schema only stores finished work.
+// SQLite for local-first MVP; models are written to swap to Postgres unchanged.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Session {
+  id        String            @id @default(cuid())
+  createdAt DateTime          @default(now())
+  profiles  BaselineProfile[]
+}
+
+model BaselineProfile {
+  id          String       @id @default(cuid())
+  sessionId   String?
+  session     Session?     @relation(fields: [sessionId], references: [id])
+  label       String // human-readable signature, e.g. "Crystal · Fractured · Privately"
+  pathIds     String // JSON array of selected baseline node ids (root → leaf)
+  signature   String       @unique // stable hash of pathIds — drives the form seed
+  descriptors String // JSON: derived baseline descriptors (form/material/surface/geometry/gesture)
+  createdAt   DateTime     @default(now())
+  generations Generation[]
+}
+
+model Generation {
+  id               String          @id @default(cuid())
+  baselineId       String
+  baseline         BaselineProfile @relation(fields: [baselineId], references: [id])
+  statePathIds     String // JSON array of current-state node ids
+  stateLabel       String // e.g. "Heavier · Deep · grieving"
+  descriptors      String // JSON: full merged descriptors (baseline + state + gesture)
+  prompt           String
+  negativePrompt   String
+  seed             Int // == baseline form seed (kept constant per baseline)
+  provider         String
+  model            String
+  controlImagePath String // saved depth/control map
+  imagePath        String? // final artwork (local)
+  imageUrl         String? // or remote URL
+  title            String
+  interpretation   String
+  status           String          @default("pending") // pending | succeeded | failed
+  createdAt        DateTime        @default(now())
+}

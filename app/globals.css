@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* INVRT design tokens — dark, gallery-like, cinematic, intimate.
+   One restrained accent. No chrome, no hard shadows. */
+@theme inline {
+  --color-void: #070708;
+  --color-surface: #0d0d0f;
+  --color-elevated: #131316;
+  --color-line: #1e1e23;
+  --color-ink: #e9e7e2;
+  --color-ink-dim: #8d8b96;
+  --color-ink-faint: #55545e;
+  --color-accent: #c2a878; /* old gold, used sparingly */
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+html {
+  background: var(--color-void);
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Slow, quiet fades — the house motion language. */
+@keyframes invrt-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes invrt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-up {
+  animation: invrt-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fade-in {
+  animation: invrt-fade 700ms ease both;
+}
+
+.fade-in-slow {
+  animation: invrt-fade 1400ms ease both;
+}
+
+/* Breathing glow for the forming page. */
+@keyframes invrt-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.breathe {
+  animation: invrt-breathe 3.2s ease-in-out infinite;
+}
