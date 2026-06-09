@@ -1,10 +1,10 @@
-// INVRT — minimal persistence. Trees/vocab/rules live in lib/translation/ as
-// config files; this schema only stores finished work.
-// SQLite for local-first dev. Deploys use prisma/schema.postgres.prisma —
-// identical models, Postgres datasource. If you edit models, edit BOTH files.
+// DEPLOYMENT SCHEMA (Vercel / Postgres).
+// Identical models to schema.prisma (SQLite, local dev) — only the datasource
+// provider differs. If you edit models, edit BOTH files.
+// vercel.json points Prisma at this schema during deploys.
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -42,9 +42,9 @@ model Generation {
   seed             Int // == baseline form seed (kept constant per baseline)
   provider         String
   model            String
-  controlImagePath String // saved depth/control map
-  imagePath        String? // final artwork (local)
-  imageUrl         String? // or remote URL
+  controlImagePath String // saved depth/control map (path or Blob URL)
+  imagePath        String? // final artwork (path or Blob URL)
+  imageUrl         String? // provider's remote URL, if any
   title            String
   interpretation   String
   status           String          @default("pending") // pending | succeeded | failed

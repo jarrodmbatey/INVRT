@@ -90,6 +90,32 @@ Edit wording freely; run `npm run check` afterward to confirm the invariants
 still hold. Note that editing a baseline path's node **ids** changes its
 signature (and therefore its form) — labels and descriptors are safe to edit.
 
+## Deploying to Vercel
+
+Vercel's serverless filesystem is ephemeral, so production swaps SQLite →
+Postgres and local files → Vercel Blob. The code paths switch automatically;
+you just connect the integrations:
+
+1. Push this repo to GitHub and **import it in Vercel** (vercel.com/new).
+2. In the project's **Storage** tab, add:
+   - a **Postgres** database (Neon) — this sets `DATABASE_URL`;
+   - a **Blob** store — this sets `BLOB_READ_WRITE_TOKEN`.
+3. In **Settings → Environment Variables**, add `REPLICATE_API_TOKEN`
+   (without it, the deploy runs on the mock provider).
+4. Deploy. `vercel.json` makes the build use `prisma/schema.postgres.prisma`
+   and run `prisma db push` against the production database automatically.
+
+Open the deployment URL on your phone — the whole ritual is tap-first.
+
+Notes:
+- The two Prisma schema files have identical models; if you change models,
+  change both (`schema.prisma` for local SQLite, `schema.postgres.prisma`
+  for deploys).
+- Generation can take 30–60s on Flux Depth; the route declares
+  `maxDuration = 300`, which Vercel's fluid compute allows on all plans.
+- For local dev nothing changes: SQLite + `public/renders/`, no Vercel
+  account needed.
+
 ## Env vars
 
 See `.env.example`. Keys are read only in server route handlers

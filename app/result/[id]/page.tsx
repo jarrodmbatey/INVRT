@@ -3,6 +3,7 @@
 
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
+import { renderSrc } from "@/lib/storage";
 import ArtworkView from "@/components/result/ArtworkView";
 import PathSummary from "@/components/result/PathSummary";
 import ResultActions from "@/components/result/ResultActions";
@@ -17,9 +18,10 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
   });
   if (!generation) notFound();
 
-  const src = generation.imagePath
-    ? `/${generation.imagePath}`
-    : (generation.imageUrl ?? `/${generation.controlImagePath}`);
+  const src =
+    renderSrc(generation.imagePath) ??
+    generation.imageUrl ??
+    renderSrc(generation.controlImagePath)!;
 
   const date = generation.createdAt.toLocaleDateString("en-US", {
     year: "numeric",
@@ -62,7 +64,7 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
         generationId={generation.id}
         baselineId={generation.baselineId}
         baselinePathIds={JSON.parse(generation.baseline.pathIds)}
-        downloadHref={generation.imagePath ? `/${generation.imagePath}` : undefined}
+        downloadHref={renderSrc(generation.imagePath)}
       />
 
       <details className="fade-in mx-auto mt-16 max-w-2xl text-(--color-ink-faint)">

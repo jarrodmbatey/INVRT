@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { prisma } from "@/lib/db/prisma";
+import { renderSrc } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function GalleryPage() {
       ) : (
         <div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {generations.map((g, i) => {
-            const src = g.imagePath ? `/${g.imagePath}` : (g.imageUrl ?? `/${g.controlImagePath}`);
+            const src = renderSrc(g.imagePath) ?? g.imageUrl ?? renderSrc(g.controlImagePath)!;
             return (
               <div key={g.id} className="fade-up" style={{ animationDelay: `${i * 90}ms` }}>
                 <Link href={`/result/${g.id}`} className="group block">

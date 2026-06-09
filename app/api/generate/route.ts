@@ -9,19 +9,16 @@
 // title + interpretation → respond.
 
 import { NextResponse } from "next/server";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/db/prisma";
 import { getProvider } from "@/lib/providers";
 import { buildPrompt } from "@/lib/prompt/buildPrompt";
 import { composeTitleAndInterpretation } from "@/lib/interpret/title";
+import { loadRender, saveRender } from "@/lib/storage";
 import { translate } from "@/lib/translation/translate";
 import { resolveBaselinePath, resolveStatePath } from "@/lib/translation/trees";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
-
-const RENDERS_DIR = path.join(process.cwd(), "public", "renders");
 
 interface GenerateBody {
   baselinePathIds?: string[];
@@ -51,7 +48,7 @@ export async function POST(req: Request) {
       if (!prev) return NextResponse.json({ error: "Generation not found" }, { status: 404 });
       baselinePathIds = JSON.parse(prev.baseline.pathIds);
       statePathIds = JSON.parse(prev.statePathIds);
-      const controlBytes = await readFile(path.join(process.cwd(), "public", prev.controlImagePath));
+      const controlBytes = await loadRender(prev.controlImagePath);
       controlImageDataUri = `data:image/png;base64,${controlBytes.toString("base64")}`;
     } else {
       if (!body.baselinePathIds?.length || !body.statePathIds?.length || !body.controlImageDataUri) {
@@ -118,10 +115,11 @@ export async function POST(req: Request) {
       },
     });
 
-    await mkdir(RENDERS_DIR, { recursive: true });
-    const controlFile = `renders/${generation.id}_control.png`;
     const controlBase64 = controlImageDataUri.replace(/^data:image\/png;base64,/, "");
-    await writeFile(path.join(process.cwd(), "public", controlFile), Buffer.from(controlBase64, "base64"));
+    const controlFile = await saveRender(
+      `${generation.id}_control.png`,
+      Buffer.from(controlBase64, "base64"),
+    );
     await prisma.generation.update({
       where: { id: generation.id },
       data: { controlImagePath: controlFile },
@@ -140,16 +138,17 @@ export async function POST(req: Request) {
         guidance: 10,
       });
 
-      const imageFile = `renders/${generation.id}.png`;
+      let artworkBytes: Buffer;
       if (result.imageBytes) {
-        await writeFile(path.join(process.cwd(), "public", imageFile), result.imageBytes);
+        artworkBytes = result.imageBytes;
       } else if (result.imageUrl) {
         const res = await fetch(result.imageUrl);
         if (!res.ok) throw new Error(`Failed to download artwork (${res.status})`);
-        await writeFile(path.join(process.cwd(), "public", imageFile), Buffer.from(await res.arrayBuffer()));
+        artworkBytes = Buffer.from(await res.arrayBuffer());
       } else {
         throw new Error("Provider returned neither bytes nor a URL");
       }
+      const imageFile = await saveRender(`${generation.id}.png`, artworkBytes);
 
       const updated = await prisma.generation.update({
         where: { id: generation.id },
@@ -162,7 +161,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         id: updated.id,
-        imageUrl: `/${imageFile}`,
+        imageUrl: /^https?:\/\//.test(imageFile) ? imageFile : `/${imageFile}`,
         title,
         interpretation,
         stateLabel: t.stateLabel,
