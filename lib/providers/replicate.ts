@@ -18,7 +18,8 @@ export function createReplicateProvider(): ImageProvider {
     id: "replicate",
     model,
     async generate(input: GenerateInput): Promise<GenerateResult> {
-      const token = process.env.REPLICATE_API_TOKEN;
+      // Tolerate common paste accidents in env values: whitespace, quotes.
+      const token = process.env.REPLICATE_API_TOKEN?.trim().replace(/^["']|["']$/g, "");
       if (!token) throw new Error("REPLICATE_API_TOKEN is not set");
       const replicate = new Replicate({ auth: token });
 
