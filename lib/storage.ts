@@ -9,23 +9,39 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 
-const blobEnabled = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+/**
+ * Find the Blob read-write token regardless of env var naming. Vercel's Blob
+ * integration can apply a custom prefix (e.g. INVRT_BLOB_READ_WRITE_TOKEN),
+ * so fall back to any *_READ_WRITE_TOKEN holding a vercel_blob_rw_ value.
+ */
+function blobToken(): string | undefined {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.endsWith("_READ_WRITE_TOKEN") && value?.startsWith("vercel_blob_rw_")) {
+      return value;
+    }
+  }
+  return undefined;
+}
 
 /** Persist a render; returns the string to store in the DB. */
 export async function saveRender(filename: string, bytes: Buffer): Promise<string> {
-  if (blobEnabled()) {
+  const token = blobToken();
+  if (token) {
     const { put } = await import("@vercel/blob");
     const blob = await put(`renders/${filename}`, bytes, {
       access: "public",
       contentType: "image/png",
       addRandomSuffix: false,
+      token,
     });
     return blob.url;
   }
   if (process.env.VERCEL) {
     throw new Error(
-      "Blob storage is not connected. In your Vercel project: Storage tab → Create → Blob, " +
-        "connect it to this project, then redeploy.",
+      "Blob storage is not connected: no *_READ_WRITE_TOKEN env var found at runtime. " +
+        "In Vercel: Storage tab → your Blob store → Show Connections → connect this project " +
+        "(all environments), then redeploy.",
     );
   }
   const dir = path.join(process.cwd(), "public", "renders");
