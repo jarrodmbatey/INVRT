@@ -4,17 +4,35 @@
 // are far too big for localStorage). In-progress selections live in
 // sessionStorage — the browser twin of lib/store/useInvrtStore.ts, which is
 // in-memory zustand state in the Next.js app.
+//
+// Every persistence layer here is optional. Sandboxed iframes and private modes
+// can refuse IndexedDB, sessionStorage or both; when that happens the ritual
+// still has to run, so each falls back to memory and the gallery simply lasts
+// as long as the tab does.
 
 const DB_NAME = "invrt";
 const DB_VERSION = 1;
 const GENERATIONS = "generations";
 
+/** Set once IndexedDB has proved unavailable; the Map is the whole fallback. */
+let memoryOnly = false;
+const memory = new Map();
 let dbPromise = null;
 
 function openDb() {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("IndexedDB is unavailable"));
+      return;
+    }
+    let request;
+    try {
+      request = indexedDB.open(DB_NAME, DB_VERSION);
+    } catch (e) {
+      reject(e);
+      return;
+    }
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(GENERATIONS)) {
@@ -25,14 +43,20 @@ function openDb() {
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error("IndexedDB is blocked"));
   });
   return dbPromise;
 }
 
-function tx(mode, run) {
-  return openDb().then(
-    (db) =>
-      new Promise((resolve, reject) => {
+/**
+ * Run one transaction, or fall back to the in-memory map. `onMemory` receives
+ * the map so each operation stays a single definition of intent.
+ */
+async function tx(mode, run, onMemory) {
+  if (!memoryOnly) {
+    try {
+      const db = await openDb();
+      return await new Promise((resolve, reject) => {
         const transaction = db.transaction(GENERATIONS, mode);
         const store = transaction.objectStore(GENERATIONS);
         let result;
@@ -48,30 +72,60 @@ function tx(mode, run) {
         transaction.oncomplete = () => resolve(result instanceof IDBRequest ? result.result : result);
         transaction.onerror = () => reject(transaction.error);
         transaction.onabort = () => reject(transaction.error);
-      }),
-  );
+      });
+    } catch (e) {
+      memoryOnly = true;
+      console.warn("[invrt] IndexedDB unavailable — the gallery will last only for this tab.", e);
+    }
+  }
+  return onMemory(memory);
+}
+
+/** True once storage has been found unavailable — the settings panel says so. */
+export function isMemoryOnly() {
+  return memoryOnly;
 }
 
 export function saveGeneration(record) {
-  return tx("readwrite", (store) => store.put(record)).then(() => record);
+  return tx(
+    "readwrite",
+    (store) => store.put(record),
+    (map) => map.set(record.id, record),
+  ).then(() => record);
 }
 
 export function getGeneration(id) {
-  return tx("readonly", (store) => store.get(id));
+  return tx(
+    "readonly",
+    (store) => store.get(id),
+    (map) => map.get(id),
+  );
 }
 
 /** Newest first — the gallery's order. */
 export async function listGenerations() {
-  const all = await tx("readonly", (store) => store.getAll());
+  const all = await tx(
+    "readonly",
+    (store) => store.getAll(),
+    (map) => [...map.values()],
+  );
   return (all ?? []).sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export function deleteGeneration(id) {
-  return tx("readwrite", (store) => store.delete(id));
+  return tx(
+    "readwrite",
+    (store) => store.delete(id),
+    (map) => map.delete(id),
+  );
 }
 
 export async function clearGenerations() {
-  await tx("readwrite", (store) => store.clear());
+  await tx(
+    "readwrite",
+    (store) => store.clear(),
+    (map) => map.clear(),
+  );
 }
 
 /** Rough footprint of the gallery, for the settings panel. */
@@ -89,19 +143,27 @@ export async function storageEstimate() {
 const SESSION_KEY = "invrt.ritual";
 const EMPTY = { baselinePathIds: [], statePathIds: [], baselineSignature: null, lastGenerationId: null };
 
+// Memory is authoritative; sessionStorage is the best-effort copy that lets the
+// ritual survive a reload. Where sessionStorage is refused, only that survival
+// is lost — the walk from baseline to result still works.
+let sessionCache = { ...EMPTY };
+
 function readSession() {
   try {
-    return { ...EMPTY, ...JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? "{}") };
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (stored) sessionCache = { ...EMPTY, ...JSON.parse(stored) };
   } catch {
-    return { ...EMPTY };
+    /* storage refused — keep using the in-memory copy */
   }
+  return sessionCache;
 }
 
 function writeSession(next) {
+  sessionCache = next;
   try {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(next));
   } catch {
-    /* private mode — the ritual still works, it just will not survive a reload */
+    /* private mode or sandboxed frame — memory carries it instead */
   }
   return next;
 }

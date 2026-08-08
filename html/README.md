@@ -7,6 +7,12 @@ in the browser instead.
 
 ## Run it
 
+**Just open it:** `html/dist/invrt.html` is the whole app as one file — every
+module, three.js, the CSS and the icon inlined, no external requests at all.
+Double-click it, mail it, drop it anywhere that serves a single file.
+
+**From source:**
+
 ```bash
 npm run html          # → http://localhost:4173
 ```
@@ -22,9 +28,21 @@ npx serve html
 Then drop the directory on GitHub Pages, Netlify, S3 — it is all static files
 and hash routes, so no rewrite rules are needed.
 
-> It has to be **served**, not opened from `file://`. Browsers refuse to load ES
-> modules over `file://`; the page detects this and says so rather than failing
-> silently.
+> The multi-file build has to be **served**, not opened from `file://`, because
+> browsers refuse to load ES modules over `file://`. The page detects that and
+> says so rather than failing silently. The single-file build has no such limit,
+> which is the whole reason it exists.
+
+**Rebuild the single file** after changing anything under `html/js` or
+`styles.css`:
+
+```bash
+npm run html:single                          # → html/dist/invrt.html
+npm run html:single -- --fragment out.html   # same page, no <head>/<body> wrapper
+```
+
+esbuild is the one build dependency in the repo and exists only for this; `html/`
+itself stays a plain, readable, buildless source tree.
 
 ## What is the same as the Next.js app
 
@@ -83,10 +101,17 @@ is annotated with the descriptor it renders, so they can be edited together.
 
 **Storage is the browser.** Finished pieces (metadata + the PNG blobs) live in
 IndexedDB; in-progress selections live in `sessionStorage`. The gallery is
-per-browser and per-device, and **Settings → Clear gallery** empties it.
+per-browser and per-device, and **Settings → Clear gallery** empties it. Both
+layers are optional: where a sandboxed frame or private mode refuses them, the
+ritual carries on in memory and the settings panel says the gallery will only
+last for the tab.
 
 **Routes are hashes.** `#/`, `#/baseline`, `#/state`, `#/forming`,
-`#/result/<id>`, `#/gallery` — see `js/router.js`.
+`#/result/<id>`, `#/gallery` — see `js/router.js`. The route is held in memory
+and the URL is updated to match, rather than the other way round: in an
+opaque-origin frame, writing the URL either throws or reloads the document out
+from under the app. Where the URL can be written, links are real, shareable and
+work with back/forward; where it cannot, navigation carries on in memory.
 
 **Framing is solved, not fixed.** The R3F canvases pin the camera at `z = 3.4`,
 which crops the form on wide or short viewports. Here the camera distance is
@@ -112,8 +137,10 @@ html/
   index.html            shell, import map, file:// notice
   styles.css            design tokens + every component style
   serve.mjs             zero-dependency static server
+  build-single.mjs      npm run html:single
   check-invariants.mjs  npm run check:html
   favicon.svg
+  dist/invrt.html       generated: the whole app in one openable file
   js/
     app.js              entry: routes + settings panel
     router.js           hash router

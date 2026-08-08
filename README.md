@@ -47,10 +47,13 @@ to be wired later.
 ### Static HTML build
 
 There is also a **dependency-free HTML version** of the whole app in `html/` —
-plain HTML, CSS and ES modules, no Next.js, no server, no database:
+plain HTML, CSS and ES modules, no Next.js, no server, no database. Open
+`html/dist/invrt.html` directly (the entire app as one self-contained file), or
+run it from source:
 
 ```bash
 npm run html          # → http://localhost:4173
+npm run html:single   # rebuild html/dist/invrt.html
 npm run check:html    # same invariant checks, run against the browser modules
 ```
 
@@ -144,6 +147,7 @@ See `.env.example`. Keys are read only in server route handlers
 - `npm run build` / `npm start` — production
 - `npm run check` — translation-layer invariant checks
 - `npm run html` — serve the static HTML build from `html/`
+- `npm run html:single` — bundle it into one openable file, `html/dist/invrt.html`
 - `npm run check:html` — the same invariant checks against the HTML build
 - `npx prisma studio` — inspect saved generations
 

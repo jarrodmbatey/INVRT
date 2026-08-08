@@ -4,14 +4,14 @@
 // call, storage, title) happens here in the browser instead. The entry point
 // wires the routes and the settings panel; the ritual itself lives in js/views.
 
-import { define, navigate, start } from "./router.js";
+import { define, navigate, onNavigate, start } from "./router.js";
 import { landingView } from "./views/landing.js";
 import { baselineView, stateView } from "./views/tree.js";
 import { formingView } from "./views/forming.js";
 import { resultView } from "./views/result.js";
 import { galleryView } from "./views/gallery.js";
 import { providerOptions } from "./render/providers.js";
-import { clearGenerations, getSettings, ritual, setSettings, storageEstimate } from "./store.js";
+import { clearGenerations, getSettings, isMemoryOnly, listGenerations, ritual, setSettings, storageEstimate } from "./store.js";
 import { el } from "./components/dom.js";
 
 define("/", landingView);
@@ -35,8 +35,12 @@ function mountSettings() {
 
   async function paint() {
     const settings = getSettings();
+    // Touch the gallery first so memory-only mode is known before it is reported.
+    const pieces = await listGenerations();
     const estimate = await storageEstimate();
-    const used = estimate?.usage != null ? `${(estimate.usage / 1048576).toFixed(1)} MB` : "unknown";
+    const where = isMemoryOnly()
+      ? `Held in memory only — this page cannot use browser storage, so the ${pieces.length === 1 ? "piece" : `${pieces.length} pieces`} here will go when the tab closes.`
+      : `Stored in this browser (IndexedDB)${estimate?.usage != null ? ` · about ${(estimate.usage / 1048576).toFixed(1)} MB in use` : ""}.`;
 
     panel.replaceChildren(
       el("h2", "Renderer"),
@@ -61,13 +65,13 @@ function mountSettings() {
         "This build renders in your browser. There is no server here to hold a Replicate key, so Flux Depth generation stays in the Next.js app — see html/README.md.",
       ),
       el("h2", { style: { marginTop: "1.25rem" } }, "Gallery"),
-      el("p.settings-note", `Stored in this browser (IndexedDB) · about ${used} in use.`),
+      el("p.settings-note", where),
       el(
         "button.button",
         {
           type: "button",
           onClick: async () => {
-            if (!confirm("Delete every piece stored in this browser? This cannot be undone.")) return;
+            if (!confirmed("Delete every piece in this gallery? This cannot be undone.")) return;
             await clearGenerations();
             await paint();
             navigate("/gallery");
@@ -81,6 +85,15 @@ function mountSettings() {
   function close() {
     panel.hidden = true;
     toggle.setAttribute("aria-expanded", "false");
+  }
+
+  /** Sandboxed frames may refuse confirm(); a blocked prompt must not delete. */
+  function confirmed(message) {
+    try {
+      return window.confirm(message);
+    } catch {
+      return false;
+    }
   }
 
   toggle.addEventListener("click", async () => {
@@ -99,5 +112,5 @@ function mountSettings() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !panel.hidden) close();
   });
-  window.addEventListener("hashchange", close);
+  onNavigate(close);
 }

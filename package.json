@@ -9,6 +9,7 @@
     "lint": "eslint",
     "check": "tsx scripts/check-invariants.ts",
     "html": "node html/serve.mjs",
+    "html:single": "node html/build-single.mjs",
     "check:html": "node html/check-invariants.mjs",
     "postinstall": "prisma generate"
   },
@@ -29,6 +30,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.184.1",
+    "esbuild": "^0.25.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "prisma": "^6.19.3",
