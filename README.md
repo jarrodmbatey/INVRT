@@ -72,6 +72,77 @@ Verify any time with:
 npm run check
 ```
 
+## The sphere (100-question assessment)
+
+Alongside the short word-tap ritual, INVRT generates a **live parametric
+sphere** — a ball of liquid or plasma, rendered like a planet — from a
+100-question assessment at `/assessment`.
+
+Same split, same rule: **structure is who you are, motion is how you're doing.**
+
+| | Source | Produces | Changes when |
+| --- | --- | --- | --- |
+| Layer 1 | questions 1–50 | `StructureParams` — topology | your baseline does |
+| Layer 2 | questions 51–100 | `MotionParams` — weather | your week does |
+
+The guarantee: two people of the same type look like **siblings**, and the same
+person on a good day and a hard week is recognisably the **same planet in
+different conditions**. If a state answer ever moved band count, base hue or
+axial tilt, the split would be broken — `npm run check:sphere` asserts it does
+not.
+
+### The four axes
+
+The sixteen types are not presets and there is no lookup table anywhere in the
+code. Each axis is scored as a continuous `-1…+1` float; the type code is just
+the four signs, and it is for display only — the renderer always uses the
+floats, so `+0.15` on Illumination is a faint internal glow, not a full one.
+
+| Axis | Poles | Letters | Reads as |
+| --- | --- | --- | --- |
+| Illumination | Inward / Outward | `I` / `O` | lit from within vs. from outside |
+| Edge | Ordered / Fluid | `R` / `F` | rigid band edges vs. bleeding ones |
+| Volatility | Steady / Volatile | `S` / `V` | protrusions constant vs. intermittent |
+| Colour relation | Unified / Contrasting | `U` / `C` | blended field vs. hard separation |
+
+See all sixteen side by side at `/types`.
+
+**Counter-rotation is the headline.** Adjacent bands shearing against each other
+reads as internal conflict with no explanation needed, so `shearIndex` gets more
+question coverage than any other motion parameter, and the shear boundary is
+placed at the sphere's activity centre — where the eye is already looking.
+
+### Where things live
+
+| File | What it is |
+| --- | --- |
+| `lib/sphere/constants.ts` | Locked material + geometry caps. Never parameters |
+| `lib/sphere/questions/v1.ts` | The 100 questions and their votes/nudges |
+| `lib/sphere/axes.ts` | Answers → four axis floats; type codes; the seed |
+| `lib/sphere/structure.ts` | Axes → `StructureParams`, one pure function per rule |
+| `lib/sphere/motion.ts` | Answers → `MotionParams`; the volatility gate |
+| `lib/sphere/constraints.ts` | The named-rule table that stops mush and broken renders |
+| `lib/sphere/bands.ts` | Band widths, colours and per-band angular velocity |
+| `components/sphere/plasma/` | The shader. One draw call; all band logic in-shader |
+
+Two things are **not** parameters and must never become any: `MATERIAL` (the
+constant semi-gloss-to-gloss sheen) and `GEOMETRY_LIMITS` (6% max displacement,
+3% max indentation). They reach the shader as compile-time constants, and the
+vertex stage clamps to them regardless of what the uniforms say.
+
+### Determinism
+
+Same answers → the same sphere, forever. The seed is a stable hash of the
+ordered *layer-1* answer vector, there is no `Math.random` anywhere on the
+generation path, and every result carries the `MAPPING_VERSION` it was scored
+under. When the question tables change, register the old table in
+`lib/sphere/questions/` rather than editing it — people regenerate and compare.
+
+```bash
+npm run check:sphere    # 69 checks: axis table, rule table, the §10 criteria
+npm run check:all       # the above plus the translation-layer invariants
+```
+
 ## Editing the trees and vocabulary (curation mode)
 
 All creative data lives in plain TypeScript files — no database edits, no
@@ -126,6 +197,8 @@ See `.env.example`. Keys are read only in server route handlers
 - `npm run dev` — local dev
 - `npm run build` / `npm start` — production
 - `npm run check` — translation-layer invariant checks
+- `npm run check:sphere` — sphere generation acceptance checks
+- `npm run check:all` — both
 - `npx prisma studio` — inspect saved generations
 
 ## Not in MVP (deliberately)

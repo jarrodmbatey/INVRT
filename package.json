@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check": "tsx scripts/check-invariants.ts",
+    "check:sphere": "tsx scripts/check-sphere.ts",
+    "check:all": "npm run check && npm run check:sphere",
     "postinstall": "prisma generate"
   },
   "dependencies": {

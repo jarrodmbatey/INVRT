@@ -1,29 +1,42 @@
 "use client";
 
-// Faint, slowly rotating form behind the landing hero. Pure atmosphere.
+// The landing hero: one plasma body, turning slowly. Not anyone's sphere —
+// a fixed, hand-picked point in the parameter space, so the front door looks
+// the same every visit.
 
-import { useSyncExternalStore } from "react";
-import { Canvas } from "@react-three/fiber";
-import InvrtSphere from "@/components/sphere/InvrtSphere";
-import { baselineTree } from "@/lib/translation/baselineTree";
+import { useMemo } from "react";
+import PlasmaScene from "@/components/sphere/plasma/PlasmaScene";
+import { sphereFromAxes } from "@/lib/sphere/generate";
+import { neutralMotion } from "@/lib/sphere/motion";
 
-const noopSubscribe = () => () => {};
+const HERO_SEED = 0x1f2e3d4;
 
 export default function HeroSphere() {
-  // Canvas requires the DOM — render only after hydration.
-  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
-  if (!mounted) return null;
-
-  const current = baselineTree.children!.find((n) => n.id === "b_current")!;
+  const params = useMemo(
+    () =>
+      sphereFromAxes(
+        // Lit from within, ordered, steady, unified: banded, glowing, calm.
+        // Deliberately a quiet corner of the space — this sits behind the
+        // landing copy and must not compete with it.
+        { illumination: 0.6, edge: -0.5, volatility: -0.2, colorRelation: -0.55 },
+        HERO_SEED,
+        {
+          ...neutralMotion(),
+          globalSpeed: 0.18,
+          speedVariance: 0.3,
+          shearIndex: 0.25,
+          turbulenceScale: 0.3,
+          turbulenceAmplitude: 0.25,
+          coherence: 0.8,
+          accentIntensity: 0.25,
+        },
+      ),
+    [],
+  );
 
   return (
     <div className="fade-in-slow pointer-events-none absolute inset-0 opacity-30">
-      <Canvas camera={{ position: [0, 0, 3.4], fov: 35 }} gl={{ antialias: true, alpha: true }}>
-        <ambientLight intensity={0.25} />
-        <directionalLight position={[2, 3, 2]} intensity={1.1} color="#cfc8ba" />
-        <directionalLight position={[-3, -1, -2]} intensity={0.3} color="#5a6478" />
-        <InvrtSphere baselinePath={[current]} spinSpeed={0.07} />
-      </Canvas>
+      <PlasmaScene params={params} animate={false} />
     </div>
   );
 }

@@ -13,6 +13,20 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // The plasma renderer runs a 60fps imperative loop: it holds WebGL
+    // uniforms, band longitudes and an in-flight transition in a ref and
+    // mutates them in place every frame. Routing that through React state
+    // would re-render the tree sixty times a second, which is the thing
+    // react-three-fiber exists to avoid. The React Compiler's immutability and
+    // ref rules do not model that loop, so they are off for this directory
+    // only — everywhere else in the app they still apply.
+    files: ["components/sphere/plasma/**"],
+    rules: {
+      "react-hooks/immutability": "off",
+      "react-hooks/refs": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

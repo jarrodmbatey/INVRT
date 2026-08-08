@@ -28,10 +28,20 @@ export default function LandingPage() {
 
         <div className="fade-up mt-14" style={{ animationDelay: "800ms" }}>
           <Link
-            href="/baseline"
+            href="/assessment"
             className="inline-block border border-(--color-line) px-12 py-4 text-xs tracking-[0.3em] text-(--color-ink) uppercase transition-all duration-700 hover:border-(--color-accent) hover:text-(--color-accent)"
           >
             Begin
+          </Link>
+        </div>
+
+        {/* The original short ritual, which still drives the image pipeline. */}
+        <div className="fade-in mt-8" style={{ animationDelay: "1200ms" }}>
+          <Link
+            href="/baseline"
+            className="text-[0.65rem] tracking-[0.3em] text-(--color-ink-faint) uppercase transition-colors duration-700 hover:text-(--color-ink-dim)"
+          >
+            The short ritual
           </Link>
         </div>
       </div>
