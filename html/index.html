@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>INVRT — Your signature, rendered</title>
+    <meta name="description" content="What lives inside you, turned outward into form." />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#070708" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      { "imports": { "three": "./vendor/three/three.module.min.js" } }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav">
+        <a class="brand" href="#/">INVRT</a>
+        <div class="nav-links">
+          <a class="nav-link" href="#/gallery">Gallery</a>
+          <button class="nav-link" type="button" id="settings-toggle" aria-expanded="false">Settings</button>
+        </div>
+      </nav>
+    </header>
+
+    <div class="settings-panel" id="settings-panel" hidden></div>
+
+    <main id="app" class="app"></main>
+
+    <!-- ES modules cannot load over file:// — say so plainly instead of failing silently. -->
+    <div class="file-protocol-notice" id="file-notice" hidden>
+      <div class="notice-inner">
+        <p class="notice-title">INVRT needs to be served over http.</p>
+        <p class="notice-body">
+          Browsers refuse to load ES modules from <code>file://</code>. From the repository root run:
+        </p>
+        <pre><code>npm run html</code></pre>
+        <p class="notice-body">then open <code>http://localhost:4173</code>.</p>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="file-protocol-notice">
+        <div class="notice-inner">
+          <p class="notice-title">INVRT needs JavaScript.</p>
+          <p class="notice-body">The sculpture is generated in your browser; there is no server to fall back to.</p>
+        </div>
+      </div>
+    </noscript>
+
+    <script>
+      if (location.protocol === "file:") {
+        document.getElementById("file-notice").hidden = false;
+        document.getElementById("app").hidden = true;
+      }
+    </script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

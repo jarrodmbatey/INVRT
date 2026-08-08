@@ -44,6 +44,23 @@ exclusions in-prompt and the negative prompt is stored for provenance.
 A `fal.ai` provider stub exists at `lib/providers/fal.ts` (`IMAGE_PROVIDER=fal`),
 to be wired later.
 
+### Static HTML build
+
+There is also a **dependency-free HTML version** of the whole app in `html/` —
+plain HTML, CSS and ES modules, no Next.js, no server, no database:
+
+```bash
+npm run html          # → http://localhost:4173
+npm run check:html    # same invariant checks, run against the browser modules
+```
+
+The translation, prompt, title and sculpture layers are ports of the same code,
+so a given baseline yields the same signature, seed and form in both. Since a
+static page can never hold a provider key, it renders the artwork locally
+(three.js, form from the baseline, light from the state) instead of calling
+Replicate. See [`html/README.md`](html/README.md) for the full list of what is
+shared and what differs.
+
 ## How it works
 
 ```
@@ -126,6 +143,8 @@ See `.env.example`. Keys are read only in server route handlers
 - `npm run dev` — local dev
 - `npm run build` / `npm start` — production
 - `npm run check` — translation-layer invariant checks
+- `npm run html` — serve the static HTML build from `html/`
+- `npm run check:html` — the same invariant checks against the HTML build
 - `npx prisma studio` — inspect saved generations
 
 ## Not in MVP (deliberately)

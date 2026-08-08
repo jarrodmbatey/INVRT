@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check": "tsx scripts/check-invariants.ts",
+    "html": "node html/serve.mjs",
+    "check:html": "node html/check-invariants.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

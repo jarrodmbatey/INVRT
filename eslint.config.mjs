@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored, minified upstream library — not ours to lint.
+    "html/vendor/**",
   ]),
 ]);
 

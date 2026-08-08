@@ -1,0 +1,770 @@
+/* INVRT — hand-written port of app/globals.css and the Tailwind utility classes
+   used across app/ and components/. Same design tokens, same motion language,
+   no build step and no webfont fetch (the display face falls back through
+   Fraunces → Iowan Old Style → Georgia so the page works offline). */
+
+:root {
+  --color-void: #070708;
+  --color-surface: #0d0d0f;
+  --color-elevated: #131316;
+  --color-line: #1e1e23;
+  --color-ink: #e9e7e2;
+  --color-ink-dim: #8d8b96;
+  --color-ink-faint: #55545e;
+  --color-accent: #c2a878; /* old gold, used sparingly */
+  --font-display: Fraunces, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-void);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── Motion: slow, quiet fades — the house language ─────────────────────────── */
+
+@keyframes invrt-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes invrt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes invrt-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.fade-up {
+  animation: invrt-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fade-in {
+  animation: invrt-fade 700ms ease both;
+}
+
+.fade-in-slow {
+  animation: invrt-fade 1400ms ease both;
+}
+
+.breathe {
+  animation: invrt-breathe 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up,
+  .fade-in,
+  .fade-in-slow,
+  .breathe {
+    animation: none;
+  }
+}
+
+/* ── Chrome ────────────────────────────────────────────────────────────────── */
+
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+}
+
+.site-nav {
+  margin: 0 auto;
+  max-width: 72rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  letter-spacing: 0.35em;
+  color: var(--color-ink);
+  transition: color 500ms;
+}
+
+.brand:hover {
+  color: var(--color-accent);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+  transition: color 500ms;
+  padding: 0;
+}
+
+.nav-link:hover {
+  color: var(--color-ink);
+}
+
+.app {
+  min-height: 100dvh;
+}
+
+/* ── Shared primitives ─────────────────────────────────────────────────────── */
+
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 0;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin: 0 0 0.5rem;
+}
+
+.button {
+  display: inline-block;
+  border: 1px solid var(--color-line);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+  background: none;
+  transition:
+    border-color 500ms,
+    color 500ms;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.button-lg {
+  padding: 1rem 3rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  color: var(--color-ink);
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: var(--color-ink-faint);
+  max-width: 32rem;
+  margin: 0.5rem auto 0;
+  line-height: 1.6;
+}
+
+/* ── Landing ───────────────────────────────────────────────────────────────── */
+
+.landing {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-sphere {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.gl-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.landing-copy {
+  position: relative;
+  z-index: 10;
+  margin: 0 auto;
+  max-width: 36rem;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.landing-title {
+  font-family: var(--font-display);
+  font-size: clamp(3.25rem, 12vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  margin: 0;
+  /* Balance the trailing letter-space so the word stays optically centered. */
+  text-indent: 0.3em;
+}
+
+.landing-tagline {
+  margin: 1.5rem 0 0;
+  font-size: 0.875rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.landing-lede {
+  margin: 2.5rem auto 0;
+  max-width: 28rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-style: italic;
+  line-height: 1.75;
+  color: var(--color-ink-dim);
+}
+
+.landing-cta {
+  margin-top: 3.5rem;
+}
+
+/* ── Word tree ─────────────────────────────────────────────────────────────── */
+
+.tree {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 42rem;
+  padding: 0 1.5rem;
+}
+
+.tree-crumbs {
+  text-align: center;
+  font-size: 0.875rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  min-height: 1.25rem;
+  margin: 0;
+}
+
+.tree-question {
+  margin: 1.5rem 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--color-ink-dim);
+}
+
+.tree-choices {
+  margin-top: 3rem;
+}
+
+.word-choice {
+  display: block;
+  width: 100%;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.word-choice-label {
+  font-family: var(--font-display);
+  font-size: clamp(1.875rem, 7vw, 2.25rem);
+  color: var(--color-ink-dim);
+  transition:
+    color 500ms,
+    letter-spacing 500ms;
+  display: inline-block;
+}
+
+.word-choice:hover .word-choice-label,
+.word-choice:focus-visible .word-choice-label {
+  color: var(--color-ink);
+  letter-spacing: 0.025em;
+}
+
+.word-choice-rule {
+  margin: 0.5rem auto 0;
+  display: block;
+  height: 1px;
+  width: 0;
+  background: var(--color-accent);
+  opacity: 0.6;
+  transition: width 500ms;
+}
+
+.word-choice:hover .word-choice-rule,
+.word-choice:focus-visible .word-choice-rule {
+  width: 4rem;
+}
+
+.tree-back {
+  margin-top: 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+.link-quiet {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  transition: color 500ms;
+}
+
+.link-quiet:hover {
+  color: var(--color-ink-dim);
+}
+
+/* ── Forming ───────────────────────────────────────────────────────────────── */
+
+.forming {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.forming-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.forming-copy {
+  position: relative;
+  z-index: 10;
+  margin-top: 55vh;
+  text-align: center;
+  padding: 0 1.5rem;
+}
+
+.forming-phrase {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--color-ink-dim);
+  margin: 0;
+}
+
+.forming-error-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-style: italic;
+  color: var(--color-ink-dim);
+  margin: 0;
+}
+
+/* ── Result ────────────────────────────────────────────────────────────────── */
+
+.page {
+  margin: 0 auto;
+  max-width: 56rem;
+  padding: 7rem 1.5rem 6rem;
+}
+
+/* The gallery is a room, so it gets the wider measure (max-w-6xl). */
+.page-wide {
+  max-width: 72rem;
+}
+
+.artwork {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 42rem;
+}
+
+.artwork img {
+  width: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.result-title {
+  margin: 3rem 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  color: var(--color-ink);
+}
+
+.interpretation {
+  margin: 2rem auto 0;
+  max-width: 28rem;
+  text-align: center;
+}
+
+.interpretation p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 2;
+  color: var(--color-ink-dim);
+}
+
+.path-summary {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.path-summary .label {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+}
+
+.path-summary .sub {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.path-summary .date {
+  margin: 0.25rem 0 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--color-ink-faint);
+}
+
+.actions {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.provenance {
+  margin: 4rem auto 0;
+  max-width: 40rem;
+  color: var(--color-ink-faint);
+}
+
+.provenance > summary {
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.625rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  list-style: none;
+}
+
+.provenance > summary::-webkit-details-marker {
+  display: none;
+}
+
+.provenance-body {
+  margin-top: 1rem;
+  border: 1px solid var(--color-line);
+  padding: 1.25rem;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.provenance-body p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.provenance-body .key {
+  color: var(--color-ink-dim);
+}
+
+.provenance-figure {
+  margin: 0.75rem 0 0;
+}
+
+.provenance-figure img {
+  width: 9rem;
+  border: 1px solid var(--color-line);
+}
+
+.provenance-figure figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ── Gallery ───────────────────────────────────────────────────────────────── */
+
+.page-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: 0.2em;
+  color: var(--color-ink);
+}
+
+.gallery-grid {
+  margin-top: 4rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3.5rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.gallery-item .thumb {
+  display: block;
+}
+
+.gallery-item img {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  object-fit: cover;
+  transition: opacity 700ms;
+}
+
+.gallery-item .thumb:hover img {
+  opacity: 0.8;
+}
+
+.gallery-item .piece-title {
+  margin: 1rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-ink);
+  transition: color 500ms;
+}
+
+.gallery-item .thumb:hover .piece-title {
+  color: var(--color-accent);
+}
+
+.gallery-item .meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+}
+
+.gallery-item .meta-faint {
+  color: var(--color-ink-faint);
+}
+
+.gallery-item details {
+  margin-top: 0.5rem;
+  color: var(--color-ink-faint);
+}
+
+.gallery-item summary {
+  cursor: pointer;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.gallery-item details p {
+  margin: 0.5rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  margin-top: 6rem;
+  text-align: center;
+}
+
+.empty p {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-style: italic;
+  color: var(--color-ink-dim);
+  margin: 0;
+}
+
+.empty .button {
+  margin-top: 2rem;
+}
+
+/* ── Settings panel ────────────────────────────────────────────────────────── */
+
+.settings-panel {
+  position: fixed;
+  top: 3.75rem;
+  right: 1.5rem;
+  z-index: 60;
+  width: min(22rem, calc(100vw - 3rem));
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  padding: 1.25rem;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--color-ink-dim);
+}
+
+.settings-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-weight: 400;
+}
+
+.settings-panel label {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  padding: 0.375rem 0;
+  cursor: pointer;
+}
+
+.settings-panel input {
+  margin-top: 0.3rem;
+  accent-color: var(--color-accent);
+}
+
+.settings-note {
+  margin: 0.75rem 0 0;
+  color: var(--color-ink-faint);
+  font-size: 0.6875rem;
+}
+
+.settings-panel .button {
+  margin-top: 1rem;
+}
+
+/* ── file:// / no-JS notice ────────────────────────────────────────────────── */
+
+.file-protocol-notice {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.notice-inner {
+  max-width: 30rem;
+  text-align: center;
+  color: var(--color-ink-dim);
+}
+
+.notice-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-style: italic;
+  color: var(--color-ink);
+}
+
+.notice-body {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.notice-inner pre {
+  border: 1px solid var(--color-line);
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  overflow-x: auto;
+}
+
+.notice-inner code {
+  color: var(--color-accent);
+}
